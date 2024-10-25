@@ -63,7 +63,7 @@ function WarehousePage({ products, warehouseData, onAddStock, onEditStock, onDel
     };
 
     return (
-        <Container sx={{ p: 3 }}>
+        <Container sx={{ p: 10, width: '100%', maxWidth: '1400px', mx: 'auto' }} maxWidth={false}>
             <Typography variant="h4" gutterBottom>
                 Управление складом
             </Typography>

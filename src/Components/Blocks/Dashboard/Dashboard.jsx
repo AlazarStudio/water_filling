@@ -147,7 +147,7 @@ function Dashboard({ orders, products }) {
     };
 
     return (
-        <Container>
+        <Container maxWidth={false} sx={{ p: 10, width: '100%', maxWidth: '1400px', mx: 'auto' }}>
             <Typography variant="h4" gutterBottom>
                 Главная страница
             </Typography>

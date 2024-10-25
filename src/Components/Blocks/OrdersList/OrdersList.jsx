@@ -115,8 +115,8 @@ function OrdersList({ orders, products, warehouseData, onEditOrder, onDeleteOrde
     };
 
     return (
-        <Container sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+        <Container sx={{ p: 10, width: '100%', maxWidth: '1400px', mx: 'auto' }} maxWidth={false}>
+            <Typography variant="h4" gutterBottom>
                 Список заказов
             </Typography>
             <Button

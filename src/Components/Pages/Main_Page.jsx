@@ -156,10 +156,10 @@ function Main_Page() {
 
     return (
         <>
-            <AppBar position="static">
+            <AppBar position="fixed">
                 <Toolbar>
                     <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                        Water Bottling System
+                        Система розлива воды
                     </Typography>
                     <Button color="inherit" component={Link} to="/dashboard">
                         Главная
