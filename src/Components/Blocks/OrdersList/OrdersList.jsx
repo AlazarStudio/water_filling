@@ -19,7 +19,8 @@ import {
     Select,
     MenuItem,
     FormControl,
-    InputLabel
+    InputLabel,
+    Alert
 } from "@mui/material";
 
 // Функция для форматирования даты
@@ -44,10 +45,11 @@ const translateStatus = (status) => {
     }
 };
 
-function OrdersList({ orders, onEditOrder, onDeleteOrder, onAddOrder }) {
+function OrdersList({ orders, products, warehouseData, onEditOrder, onDeleteOrder, onAddOrder, onUpdateStock }) {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
     const [editOrder, setEditOrder] = useState(null);
     const [newOrder, setNewOrder] = useState(null);
+    const [errorMessage, setErrorMessage] = useState('');
 
     const handleSort = (key) => {
         let direction = 'asc';
@@ -86,16 +88,30 @@ function OrdersList({ orders, onEditOrder, onDeleteOrder, onAddOrder }) {
     };
 
     const handleNewOrderClick = () => {
-        setNewOrder({ client: '', volume: '', packageType: '', date: '', status: 'active' });
+        setNewOrder({ client: '', productId: '', quantity: 1, date: '', status: 'active' });
     };
 
     const handleSaveNewOrder = () => {
-        onAddOrder(newOrder);
-        setNewOrder(null);
+        const productStock = getStock(newOrder.productId);
+        if (newOrder.quantity > productStock) {
+            setErrorMessage(`На складе доступно только ${productStock} единиц выбранного продукта.`);
+        } else {
+            onAddOrder(newOrder);
+            onUpdateStock(newOrder.productId, productStock - newOrder.quantity);
+            setNewOrder(null);
+            setErrorMessage('');
+        }
     };
 
     const handleCancelNewOrder = () => {
         setNewOrder(null);
+        setErrorMessage('');
+    };
+
+    // Функция для получения количества на складе по productId
+    const getStock = (productId) => {
+        const item = warehouseData.find((w) => w.productId === productId);
+        return item ? item.stock : 0;
     };
 
     return (
@@ -115,158 +131,60 @@ function OrdersList({ orders, onEditOrder, onDeleteOrder, onAddOrder }) {
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={sortConfig.key === 'id'}
-                                    direction={sortConfig.direction}
-                                    onClick={() => handleSort('id')}
-                                >
-                                    ID
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={sortConfig.key === 'client'}
-                                    direction={sortConfig.direction}
-                                    onClick={() => handleSort('client')}
-                                >
-                                    Клиент
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={sortConfig.key === 'volume'}
-                                    direction={sortConfig.direction}
-                                    onClick={() => handleSort('volume')}
-                                >
-                                    Объем
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={sortConfig.key === 'packageType'}
-                                    direction={sortConfig.direction}
-                                    onClick={() => handleSort('packageType')}
-                                >
-                                    Тип упаковки
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={sortConfig.key === 'date'}
-                                    direction={sortConfig.direction}
-                                    onClick={() => handleSort('date')}
-                                >
-                                    Дата
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={sortConfig.key === 'status'}
-                                    direction={sortConfig.direction}
-                                    onClick={() => handleSort('status')}
-                                >
-                                    Состояние
-                                </TableSortLabel>
-                            </TableCell>
+                            <TableCell>ID</TableCell>
+                            <TableCell>Клиент</TableCell>
+                            <TableCell>Продукт</TableCell>
+                            <TableCell>Количество</TableCell>
+                            <TableCell>Цена за единицу</TableCell>
+                            <TableCell>Общая стоимость</TableCell>
+                            <TableCell>Дата</TableCell>
+                            <TableCell>Состояние</TableCell>
                             <TableCell>Действия</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {sortedOrders.map((order) => (
-                            <TableRow key={order.id}>
-                                <TableCell>{order.id}</TableCell>
-                                <TableCell>{order.client}</TableCell>
-                                <TableCell>{order.volume}</TableCell>
-                                <TableCell>{order.packageType}</TableCell>
-                                <TableCell>{formatDate(order.date)}</TableCell>
-                                <TableCell>{translateStatus(order.status)}</TableCell>
-                                <TableCell>
-                                    <Button
-                                        variant="outlined"
-                                        color="primary"
-                                        size="small"
-                                        onClick={() => handleEditClick(order)}
-                                    >
-                                        Редактировать
-                                    </Button>
-                                    <Button
-                                        variant="outlined"
-                                        color="secondary"
-                                        size="small"
-                                        onClick={() => onDeleteOrder(order.id)}
-                                        sx={{ ml: 1 }}
-                                    >
-                                        Удалить
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        {sortedOrders.map((order) => {
+                            const product = products.find((p) => p.id === order.productId);
+                            return (
+                                <TableRow key={order.id}>
+                                    <TableCell>{order.id}</TableCell>
+                                    <TableCell>{order.client}</TableCell>
+                                    <TableCell>{product ? product.name : 'Неизвестный продукт'}</TableCell>
+                                    <TableCell>{order.quantity}</TableCell>
+                                    <TableCell>{product ? `${product.price} ₽` : '—'}</TableCell>
+                                    <TableCell>{product ? product.price * order.quantity : 0} ₽</TableCell>
+                                    <TableCell>{formatDate(order.date)}</TableCell>
+                                    <TableCell>{translateStatus(order.status)}</TableCell>
+                                    <TableCell>
+                                        <Button
+                                            variant="outlined"
+                                            color="primary"
+                                            size="small"
+                                            onClick={() => handleEditClick(order)}
+                                        >
+                                            Редактировать
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            color="secondary"
+                                            size="small"
+                                            onClick={() => onDeleteOrder(order.id)}
+                                            sx={{ ml: 1 }}
+                                        >
+                                            Удалить
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </Paper>
 
-            {/* Диалог редактирования заказа */}
-            {editOrder && (
-                <Dialog open={true} onClose={handleCancelEdit}>
-                    <DialogTitle>Редактировать заказ</DialogTitle>
-                    <DialogContent>
-                        <TextField
-                            label="Клиент"
-                            variant="outlined"
-                            fullWidth
-                            margin="normal"
-                            value={editOrder.client}
-                            onChange={(e) => setEditOrder({ ...editOrder, client: e.target.value })}
-                        />
-                        <TextField
-                            label="Объем"
-                            variant="outlined"
-                            fullWidth
-                            margin="normal"
-                            value={editOrder.volume}
-                            onChange={(e) => setEditOrder({ ...editOrder, volume: e.target.value })}
-                        />
-                        <TextField
-                            label="Тип упаковки"
-                            variant="outlined"
-                            fullWidth
-                            margin="normal"
-                            value={editOrder.packageType}
-                            onChange={(e) => setEditOrder({ ...editOrder, packageType: e.target.value })}
-                        />
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel id="edit-status-label">Состояние</InputLabel>
-                            <Select
-                                labelId="edit-status-label"
-                                value={editOrder.status}
-                                onChange={(e) => setEditOrder({ ...editOrder, status: e.target.value })}
-                                label="Состояние"
-                            >
-                                <MenuItem value="active">Активный</MenuItem>
-                                <MenuItem value="completed">Завершённый</MenuItem>
-                            </Select>
-                        </FormControl>
-                        <TextField
-                            label="Дата"
-                            variant="outlined"
-                            fullWidth
-                            type="date"
-                            margin="normal"
-                            value={editOrder.date}
-                            onChange={(e) => setEditOrder({ ...editOrder, date: e.target.value })}
-                            InputLabelProps={{ shrink: true }}
-                        />
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleSaveEdit} color="primary">
-                            Сохранить
-                        </Button>
-                        <Button onClick={handleCancelEdit} color="secondary">
-                            Отмена
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+            {errorMessage && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                    {errorMessage}
+                </Alert>
             )}
 
             {/* Диалог для добавления нового заказа */}
@@ -282,21 +200,42 @@ function OrdersList({ orders, onEditOrder, onDeleteOrder, onAddOrder }) {
                             value={newOrder.client}
                             onChange={(e) => setNewOrder({ ...newOrder, client: e.target.value })}
                         />
+                        <FormControl fullWidth margin="normal">
+                            <InputLabel id="product-label">Продукт</InputLabel>
+                            <Select
+                                labelId="product-label"
+                                value={newOrder.productId}
+                                onChange={(e) => setNewOrder({ ...newOrder, productId: e.target.value })}
+                                label="Продукт"
+                            >
+                                {products.map((product) => (
+                                    <MenuItem key={product.id} value={product.id}>
+                                        {product.name} (доступно: {getStock(product.id)})
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
                         <TextField
-                            label="Объем"
+                            label="Количество"
                             variant="outlined"
                             fullWidth
                             margin="normal"
-                            value={newOrder.volume}
-                            onChange={(e) => setNewOrder({ ...newOrder, volume: e.target.value })}
-                        />
-                        <TextField
-                            label="Тип упаковки"
-                            variant="outlined"
-                            fullWidth
-                            margin="normal"
-                            value={newOrder.packageType}
-                            onChange={(e) => setNewOrder({ ...newOrder, packageType: e.target.value })}
+                            type="number"
+                            value={newOrder.quantity}
+                            inputProps={{
+                                min: 1,
+                                max: getStock(newOrder.productId),
+                            }}
+                            onChange={(e) => {
+                                const value = parseInt(e.target.value, 10) || 0;
+                                const maxStock = getStock(newOrder.productId);
+
+                                if (value <= maxStock) {
+                                    setNewOrder({ ...newOrder, quantity: value });
+                                } else {
+                                    setNewOrder({ ...newOrder, quantity: maxStock });
+                                }
+                            }}
                         />
                         <FormControl fullWidth margin="normal">
                             <InputLabel id="new-order-status-label">Состояние</InputLabel>
@@ -326,6 +265,88 @@ function OrdersList({ orders, onEditOrder, onDeleteOrder, onAddOrder }) {
                             Сохранить
                         </Button>
                         <Button onClick={handleCancelNewOrder} color="secondary">
+                            Отмена
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            )}
+            {editOrder && (
+                <Dialog open={true} onClose={handleCancelEdit}>
+                    <DialogTitle>Редактировать заказ</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            label="Клиент"
+                            variant="outlined"
+                            fullWidth
+                            margin="normal"
+                            value={editOrder.client}
+                            onChange={(e) => setEditOrder({ ...editOrder, client: e.target.value })}
+                        />
+                        <FormControl fullWidth margin="normal">
+                            <InputLabel id="product-label">Продукт</InputLabel>
+                            <Select
+                                labelId="product-label"
+                                value={editOrder.productId}
+                                onChange={(e) => setEditOrder({ ...editOrder, productId: e.target.value })}
+                                label="Продукт"
+                            >
+                                {products.map((product) => (
+                                    <MenuItem key={product.id} value={product.id}>
+                                        {product.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <TextField
+                            label="Количество"
+                            variant="outlined"
+                            fullWidth
+                            margin="normal"
+                            type="number"
+                            value={editOrder.quantity}
+                            inputProps={{
+                                min: 1,
+                                max: getStock(editOrder.productId) + editOrder.quantity, // Добавляем текущее количество к доступному на складе
+                            }}
+                            onChange={(e) => {
+                                const value = parseInt(e.target.value, 10) || 0;
+                                const maxStock = getStock(editOrder.productId) + editOrder.quantity;
+
+                                if (value <= maxStock) {
+                                    setEditOrder({ ...editOrder, quantity: value });
+                                } else {
+                                    setEditOrder({ ...editOrder, quantity: maxStock });
+                                }
+                            }}
+                        />
+                        <FormControl fullWidth margin="normal">
+                            <InputLabel id="edit-status-label">Состояние</InputLabel>
+                            <Select
+                                labelId="edit-status-label"
+                                value={editOrder.status}
+                                onChange={(e) => setEditOrder({ ...editOrder, status: e.target.value })}
+                                label="Состояние"
+                            >
+                                <MenuItem value="active">Активный</MenuItem>
+                                <MenuItem value="completed">Завершённый</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <TextField
+                            label="Дата"
+                            variant="outlined"
+                            fullWidth
+                            type="date"
+                            margin="normal"
+                            value={editOrder.date}
+                            onChange={(e) => setEditOrder({ ...editOrder, date: e.target.value })}
+                            InputLabelProps={{ shrink: true }}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleSaveEdit} color="primary">
+                            Сохранить
+                        </Button>
+                        <Button onClick={handleCancelEdit} color="secondary">
                             Отмена
                         </Button>
                     </DialogActions>

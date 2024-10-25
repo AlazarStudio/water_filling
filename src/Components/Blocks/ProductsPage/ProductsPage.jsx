@@ -29,7 +29,7 @@ const formatDate = (dateString) => {
     return `${day}.${month}.${year}`;
 };
 
-function ProductsPage({ products, onAddProduct, onEditProduct, onDeleteProduct }) {
+function ProductsPage({ products, warehouseData, onAddProduct, onEditProduct, onDeleteProduct }) {
     const [editProduct, setEditProduct] = useState(null);
 
     const handleEditClick = (product) => {
@@ -51,6 +51,12 @@ function ProductsPage({ products, onAddProduct, onEditProduct, onDeleteProduct }
         setEditProduct(null);
     };
 
+    // Функция для получения количества на складе по productId
+    const getStock = (productId) => {
+        const item = warehouseData.find((w) => w.productId === productId);
+        return item ? item.stock : 0;
+    };
+
     return (
         <Container sx={{ p: 3 }}>
             <Typography variant="h4" gutterBottom>
@@ -60,7 +66,7 @@ function ProductsPage({ products, onAddProduct, onEditProduct, onDeleteProduct }
                 <Button
                     variant="contained"
                     color="primary"
-                    onClick={() => setEditProduct({ id: '', name: '', description: '', price: '', stock: '', category: '', date: '' })}
+                    onClick={() => setEditProduct({ id: '', name: '', description: '', price: '', costPrice: '', stock: '', category: '', date: '' })}
                 >
                     Добавить продукт
                 </Button>
@@ -72,8 +78,9 @@ function ProductsPage({ products, onAddProduct, onEditProduct, onDeleteProduct }
                             <TableCell>Название</TableCell>
                             <TableCell>Описание</TableCell>
                             <TableCell>Цена</TableCell>
-                            <TableCell>Количество на складе</TableCell>
-                            <TableCell>Категория</TableCell>
+                            <TableCell>Себестоимость</TableCell>
+                            <TableCell>На складе</TableCell>
+                            {/* <TableCell>Категория</TableCell> */}
                             <TableCell>Дата добавления</TableCell>
                             <TableCell>Действия</TableCell>
                         </TableRow>
@@ -84,8 +91,9 @@ function ProductsPage({ products, onAddProduct, onEditProduct, onDeleteProduct }
                                 <TableCell>{product.name}</TableCell>
                                 <TableCell>{product.description}</TableCell>
                                 <TableCell>{product.price} ₽</TableCell>
-                                <TableCell>{product.stock}</TableCell>
-                                <TableCell>{product.category}</TableCell>
+                                <TableCell>{product.costPrice} ₽</TableCell>
+                                <TableCell>{getStock(product.id)} шт.</TableCell>
+                                {/* <TableCell>{product.category}</TableCell> */}
                                 <TableCell>{formatDate(product.date)}</TableCell>
                                 <TableCell>
                                     <Button
@@ -143,15 +151,15 @@ function ProductsPage({ products, onAddProduct, onEditProduct, onDeleteProduct }
                             onChange={(e) => setEditProduct({ ...editProduct, price: e.target.value })}
                         />
                         <TextField
-                            label="Количество на складе"
+                            label="Себестоимость"
                             variant="outlined"
                             fullWidth
                             margin="normal"
                             type="number"
-                            value={editProduct.stock}
-                            onChange={(e) => setEditProduct({ ...editProduct, stock: e.target.value })}
+                            value={editProduct.costPrice}
+                            onChange={(e) => setEditProduct({ ...editProduct, costPrice: e.target.value })}
                         />
-                        <FormControl fullWidth margin="normal">
+                        {/* <FormControl fullWidth margin="normal">
                             <InputLabel id="category-label">Категория</InputLabel>
                             <Select
                                 labelId="category-label"
@@ -163,7 +171,7 @@ function ProductsPage({ products, onAddProduct, onEditProduct, onDeleteProduct }
                                 <MenuItem value="Вода">Вода</MenuItem>
                                 <MenuItem value="Соки">Соки</MenuItem>
                             </Select>
-                        </FormControl>
+                        </FormControl> */}
                         <TextField
                             label="Дата добавления"
                             variant="outlined"

@@ -5,12 +5,14 @@ import { AppBar, Toolbar, Button, Typography, Box } from "@mui/material";
 import OrdersList from "../Blocks/OrdersList/OrdersList";
 import Dashboard from "../Blocks/Dashboard/Dashboard";
 import ProductsPage from "../Blocks/ProductsPage/ProductsPage";
+import WarehousePage from "../Blocks/WarehousePage/WarehousePage";
 
 function Main_Page() {
     const { page } = useParams();
     const [userEmail, setUserEmail] = useState(null);
     const [orders, setOrders] = useState([]);
     const [products, setProducts] = useState([]);
+    const [warehouseData, setWarehouseData] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -36,6 +38,31 @@ function Main_Page() {
             .catch((error) => console.error("Ошибка загрузки продукции:", error));
     }, []);
 
+    useEffect(() => {
+        fetch("/warehouse.json")
+            .then((response) => response.json())
+            .then((data) => setWarehouseData(data))
+            .catch((error) => console.error("Ошибка загрузки данных склада:", error));
+    }, []);
+
+    const handleAddStock = (newStock) => {
+        setWarehouseData((prevData) => [...prevData, newStock]);
+    };
+
+    const handleEditStock = (editedStock) => {
+        setWarehouseData((prevData) =>
+            prevData.map((item) =>
+                item.productId === editedStock.productId ? editedStock : item
+            )
+        );
+    };
+
+    const handleDeleteStock = (productId) => {
+        setWarehouseData((prevData) =>
+            prevData.filter((item) => item.productId !== productId)
+        );
+    };
+
     const onLogout = () => {
         localStorage.clear();
         setUserEmail(null);
@@ -60,26 +87,66 @@ function Main_Page() {
         setOrders((prevOrders) => prevOrders.filter((order) => order.id !== orderId));
     };
 
+
+    const handleAddProduct = (newProduct) => {
+        const maxId = products.length > 0 ? Math.max(...products.map(product => parseInt(product.id))) : 0;
+        const nextId = (maxId + 1).toString().padStart(5, '0');
+
+        const productWithId = { ...newProduct, id: nextId };
+        setProducts((prevProducts) => [...prevProducts, productWithId]);
+    };
+
+    const handleEditProduct = (editedProduct) => {
+        setProducts((prevProducts) =>
+            prevProducts.map((product) => (product.id === editedProduct.id ? editedProduct : product))
+        );
+    };
+
+    const handleDeleteProduct = (productId) => {
+        setProducts((prevProducts) => prevProducts.filter((product) => product.id !== productId));
+    };
+
+    const handleUpdateStock = (productId, newStock) => {
+        setWarehouseData((prevData) =>
+            prevData.map((item) =>
+                item.productId === productId ? { ...item, stock: newStock } : item
+            )
+        );
+    };
     const renderContent = () => {
         switch (page) {
             case 'dashboard':
-                return <Dashboard orders={orders} />;
+                return <Dashboard orders={orders} products={products} />;
             case 'orders':
                 return (
                     <OrdersList
                         orders={orders}
+                        products={products}
+                        warehouseData={warehouseData}
                         onEditOrder={handleEditOrder}
                         onDeleteOrder={handleDeleteOrder}
                         onAddOrder={handleAddOrder}
+                        onUpdateStock={handleUpdateStock}
                     />
                 );
             case 'products':
                 return (
                     <ProductsPage
                         products={products}
+                        warehouseData={warehouseData} // Передаем данные о складе
                         onAddProduct={handleAddProduct}
                         onEditProduct={handleEditProduct}
                         onDeleteProduct={handleDeleteProduct}
+                    />
+                );
+            case 'warehouse':
+                return (
+                    <WarehousePage
+                        products={products}
+                        warehouseData={warehouseData}
+                        onAddStock={handleAddStock}
+                        onEditStock={handleEditStock}
+                        onDeleteStock={handleDeleteStock}
                     />
                 );
             default:
@@ -102,6 +169,9 @@ function Main_Page() {
                     </Button>
                     <Button color="inherit" component={Link} to="/products">
                         Продукция
+                    </Button>
+                    <Button color="inherit" component={Link} to="/warehouse">
+                        Склад
                     </Button>
                     <Button color="inherit" onClick={onLogout}>
                         Выйти
