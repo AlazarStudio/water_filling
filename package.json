@@ -13,9 +13,12 @@
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@mui/material": "^6.1.5",
+    "chart.js": "^4.4.5",
+    "dayjs": "^1.11.13",
     "react": "^18.2.0",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.22.1"
+    "react-router-dom": "^6.27.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.55",

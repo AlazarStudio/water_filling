@@ -1,3 +1,4 @@
+// src/App.js
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import Main_Page from "./Components/Pages/Main_Page";
@@ -14,6 +15,7 @@ function App() {
           <Route index element={<Main_Page />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
+          <Route path=":page" element={<Main_Page />} />
           <Route path="*" element={<Non_Found_Page />} />
         </Route>
       </Routes>
@@ -22,4 +24,3 @@ function App() {
 }
 
 export default App;
-

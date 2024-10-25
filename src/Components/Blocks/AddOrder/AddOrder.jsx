@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { Container, TextField, Button, Typography, Box } from "@mui/material";
+import { Container, TextField, Button, Typography, Box, Select, MenuItem, InputLabel, FormControl } from "@mui/material";
 
 function AddOrder({ onAddOrder }) {
     const [client, setClient] = useState("");
     const [volume, setVolume] = useState("");
     const [packageType, setPackageType] = useState("");
     const [date, setDate] = useState("");
+    const [status, setStatus] = useState("");
 
     const handleAddOrder = () => {
         const newOrder = {
@@ -14,12 +15,14 @@ function AddOrder({ onAddOrder }) {
             volume,
             packageType,
             date,
+            status
         };
         onAddOrder(newOrder);
         setClient("");
         setVolume("");
         setPackageType("");
         setDate("");
+        setStatus("");
     };
 
     return (
@@ -52,6 +55,18 @@ function AddOrder({ onAddOrder }) {
                     value={packageType}
                     onChange={(e) => setPackageType(e.target.value)}
                 />
+                <FormControl fullWidth margin="normal">
+                    <InputLabel id="status-label">Состояние</InputLabel>
+                    <Select
+                        labelId="status-label"
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                        label="Состояние"
+                    >
+                        <MenuItem value="active">Активный</MenuItem>
+                        <MenuItem value="completed">Завершённый</MenuItem>
+                    </Select>
+                </FormControl>
                 <TextField
                     label="Дата"
                     variant="outlined"
