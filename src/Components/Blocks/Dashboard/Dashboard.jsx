@@ -91,7 +91,7 @@ function Dashboard({ orders, products }) {
     let totalCost = 0;
 
     filteredCompletedOrders.forEach(order => {
-        const product = products.find(p => p.id === order.productId);
+        const product = products?.find(p => p.id === order.productId);
         const formattedDate = formatDate(order.date);
 
         if (product) {
